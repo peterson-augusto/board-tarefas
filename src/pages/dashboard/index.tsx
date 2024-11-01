@@ -1,14 +1,14 @@
-import { GetServerSideProps } from 'next';
-import { ChangeEvent, FormEvent, useState, useEffect } from 'react';
+import { GetServerSideProps } from "next";
+import { ChangeEvent, FormEvent, useState, useEffect } from "react";
 import styles from './styles.module.css';
 import Head from 'next/head';
 
-import { getSession } from 'next-auth/react';
-import { Textarea } from '@/components/textarea';
-import { FiShare2 } from 'react-icons/fi';
-import { FaTrash } from 'react-icons/fa';
+import { getSession } from "next-auth/react";
+import { Textarea } from "@/components/textarea";
+import { FiShare2 } from "react-icons/fi";
+import { FaTrash } from "react-icons/fa";
 
-import { db } from '@/services/firebaseConnection';
+import { db } from '../../services/firebaseConnection';
 
 import {
     addDoc,
@@ -20,7 +20,7 @@ import {
     doc,
     deleteDoc
 } from 'firebase/firestore';
-import Link from 'next/link';
+import Link from "next/link";
 
 interface HomeProps {
     user: {
@@ -29,17 +29,17 @@ interface HomeProps {
 }
 
 interface TaskProps {
-    id: string,
-    created: Date,
+    id: string;
+    created: Date;
     public: boolean;
-    tarefa: string,
+    tarefa: string;
     user: string;
 }
 
 export default function Dashboard({ user }: HomeProps) {
     const [input, setInput] = useState('');
-    const [publicTask, setPublicTask] = useState(false);
-    const [tasks, setTasks] = useState<TaskProps[]>([]);
+    const [publicTask, setPublicTask] = useState(false)
+    const [tasks, setTasks] = useState<TaskProps[]>([])
 
     useEffect(() => {
         async function loadTarefas() {
@@ -60,22 +60,22 @@ export default function Dashboard({ user }: HomeProps) {
                         created: doc.data().created,
                         user: doc.data().user,
                         public: doc.data().public,
-                    })
-                })
+                    });
+                });
 
                 setTasks(lista);
             })
         }
 
-        loadTarefas()
+        loadTarefas();
     }, [user?.email]);
 
-    function handleChangePublic(e: ChangeEvent<HTMLInputElement>) {
-        setPublicTask(e.target.checked);
+    function handleChangePublic(event: ChangeEvent<HTMLInputElement>) {
+        setPublicTask(event.target.checked);
     }
 
-    async function handleRegisterTask(e: FormEvent) {
-        e.preventDefault();
+    async function handleRegisterTask(event: FormEvent) {
+        event.preventDefault();
 
         if (input === '') return;
 
@@ -84,11 +84,11 @@ export default function Dashboard({ user }: HomeProps) {
                 tarefa: input,
                 created: new Date(),
                 user: user?.email,
-                public: publicTask,
+                public: publicTask
             });
 
             setInput('');
-            setPublicTask(false)
+            setPublicTask(false);
         } catch (err) {
             console.log(err)
         }
@@ -96,14 +96,14 @@ export default function Dashboard({ user }: HomeProps) {
 
     async function handleShare(id: string) {
         await navigator.clipboard.writeText(
-            `${process.env.NEXTAUTH_URL}/task/${id}`
-        )
+            `${process.env.NEXT_PUBLIC_URL}/task/${id}`
+        );
 
-        alert('URL Copiada com sucesso!')
+        alert('URL copiada com sucesso!')
     }
 
     async function handleDeleteTask(id: string) {
-        const docRef = doc(db, 'tarefas', id)
+        const docRef = doc(db, 'tarefas', id);
         await deleteDoc(docRef)
     }
 
@@ -120,13 +120,12 @@ export default function Dashboard({ user }: HomeProps) {
 
                         <form onSubmit={handleRegisterTask}>
                             <Textarea
-                                placeholder='Digite qual sua tarefa...'
+                                placeholder="Digite sua tarefa..."
                                 value={input}
-                                onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
-                                    setInput(e.target.value)
+                                onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
+                                    setInput(event.target.value)
                                 }
                             />
-
                             <div className={styles.checkboxArea}>
                                 <input
                                     type="checkbox"
@@ -134,10 +133,12 @@ export default function Dashboard({ user }: HomeProps) {
                                     checked={publicTask}
                                     onChange={handleChangePublic}
                                 />
-                                <label>Deixar tarefa publica?</label>
+                                <label>Deixar tarefa pública?</label>
                             </div>
 
-                            <button className={styles.button} type='submit'>Registrar</button>
+                            <button className={styles.button} type="submit">
+                                Registrar
+                            </button>
                         </form>
                     </div>
                 </section>
@@ -149,15 +150,17 @@ export default function Dashboard({ user }: HomeProps) {
                         <article key={item.id} className={styles.task}>
                             {item.public && (
                                 <div className={styles.tagContainer}>
-                                    <label className={styles.tag}>PUBLICO</label>
-                                    <button className={styles.sharedButton} onClick={() => handleShare(item.id)}>
-                                        <FiShare2 size={22} color='#3183ff' />
+                                    <label className={styles.tag}>PÚBLICO</label>
+                                    <button
+                                        className={styles.shareButton}
+                                        onClick={() => handleShare(item.id)}
+                                    >
+                                        <FiShare2 size={22} color="#3183ff" />
                                     </button>
                                 </div>
                             )}
 
                             <div className={styles.taskContent}>
-
                                 {item.public ? (
                                     <Link href={`/task/${item.id}`}>
                                         <p>{item.tarefa}</p>
@@ -166,8 +169,11 @@ export default function Dashboard({ user }: HomeProps) {
                                     <p>{item.tarefa}</p>
                                 )}
 
-                                <button className={styles.trashButton} onClick={() => handleDeleteTask(item.id)}>
-                                    <FaTrash size={24} color='#ea3140' />
+                                <button
+                                    className={styles.trashButton}
+                                    onClick={() => handleDeleteTask(item.id)}
+                                >
+                                    <FaTrash size={24} color="#ea3140" />
                                 </button>
                             </div>
                         </article>
@@ -180,10 +186,10 @@ export default function Dashboard({ user }: HomeProps) {
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
     const session = await getSession({ req });
-    // console.log(session)
+    // console.log(session);
 
     if (!session?.user) {
-        // Se não tem usuário vamos redirecionar para home '/'
+        // Se nao tem usuario vamos redirecionar para / -> 'home'
         return {
             redirect: {
                 destination: '/',
@@ -195,8 +201,9 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
     return {
         props: {
             user: {
-                email: session?.user?.email
+                email: session?.user?.email,
             }
         }
     }
+
 }
